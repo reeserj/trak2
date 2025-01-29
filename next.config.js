@@ -6,6 +6,7 @@ const nextConfig = {
   },
   basePath: process.env.NODE_ENV === 'production' ? '/trak2' : '',
   assetPrefix: process.env.NODE_ENV === 'production' ? '/trak2/' : '',
+  trailingSlash: true,
 }
 
 module.exports = nextConfig 
