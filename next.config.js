@@ -4,9 +4,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/trak2' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/trak2/' : '',
+  basePath: '/trak2',
+  assetPrefix: '/trak2/',
   trailingSlash: true,
+  distDir: 'out',
 }
 
 module.exports = nextConfig 
