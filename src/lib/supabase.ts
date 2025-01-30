@@ -56,23 +56,47 @@ export const signUpUser = async (email: string, password: string) => {
 // Magic Link signin function
 export const signInWithMagicLink = async (email: string) => {
   try {
+    console.log('Attempting to send magic link to:', email);
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: true,
         emailRedirectTo: redirectURL,
+        data: {
+          // Add minimal user data to help with debugging
+          created_at: new Date().toISOString(),
+          provider: 'magic_link'
+        }
       }
     });
 
     if (error) {
-      console.error('Magic link error:', error.message);
+      // Log detailed error information
+      console.error('Magic link error details:', {
+        message: error.message,
+        status: error.status,
+        name: error.name,
+        details: error
+      });
       return { data: null, error };
     }
 
-    console.log('Magic link sent successfully');
+    console.log('Magic link sent successfully:', data);
     return { data, error: null };
   } catch (err) {
     console.error('Unexpected error during magic link signin:', err);
+    // If it's an error we can handle, return it structured
+    if (err instanceof Error) {
+      return { 
+        data: null, 
+        error: {
+          message: err.message,
+          name: err.name,
+          // @ts-ignore - adding stack for debugging
+          stack: err.stack
+        }
+      };
+    }
     return { data: null, error: err as Error };
   }
 };
