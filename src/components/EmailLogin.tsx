@@ -53,7 +53,7 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/trak2/reset-password`,
+        redirectTo: `${window.location.origin}/trak2/reset-password/`,
       });
 
       if (error) throw error;
@@ -69,7 +69,7 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
     <div className="p-6 rounded-lg bg-white dark:bg-gray-800 shadow-xl w-full max-w-md">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-          {isSignUp ? 'Create Account' : 'Sign In'}
+          {isResetMode ? 'Reset Password' : (isSignUp ? 'Create Account' : 'Sign In')}
         </h2>
         <button
           onClick={onClose}
@@ -139,7 +139,7 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
               Processing...
             </span>
           ) : (
-            isSignUp ? 'Sign Up' : 'Sign In'
+            isResetMode ? 'Send Reset Link' : (isSignUp ? 'Sign Up' : 'Sign In')
           )}
         </button>
 
@@ -148,6 +148,7 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
           onClick={() => {
             setIsResetMode(!isResetMode);
             setMessage('');
+            setError(null);
           }}
           className="w-full text-sm text-gray-400 hover:text-white transition-colors"
         >
@@ -155,15 +156,21 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
         </button>
       </form>
 
-      <div className="mt-4 text-center">
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          className="text-sm text-brand-blue hover:text-opacity-90"
-          disabled={loading}
-        >
-          {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-        </button>
-      </div>
+      {!isResetMode && (
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError(null);
+              setMessage('');
+            }}
+            className="text-sm text-brand-blue hover:text-opacity-90"
+            disabled={loading}
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
+        </div>
+      )}
     </div>
   );
 } 

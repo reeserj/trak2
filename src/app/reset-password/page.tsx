@@ -12,11 +12,33 @@ export default function ResetPassword() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if we have the access token in the URL
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (!hashParams.get('access_token')) {
-      setMessage('Invalid or expired reset link');
-    }
+    const handleHashChange = async () => {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (!accessToken) {
+          setMessage('Invalid or expired reset link');
+          return;
+        }
+
+        // Set the session using the tokens from the URL
+        const { data: { session }, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+
+        if (error) {
+          throw error;
+        }
+      } catch (error: any) {
+        console.error('Error setting session:', error);
+        setMessage('Error processing reset link. Please try again.');
+      }
+    };
+
+    handleHashChange();
   }, []);
 
   const handleReset = async (e: React.FormEvent) => {
@@ -38,7 +60,7 @@ export default function ResetPassword() {
       if (error) throw error;
 
       setMessage('Password updated successfully! Redirecting...');
-      setTimeout(() => router.push('/'), 2000);
+      setTimeout(() => router.push('/trak2'), 2000);
     } catch (error: any) {
       setMessage(error.message || 'An error occurred updating your password');
     } finally {
