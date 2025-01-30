@@ -7,9 +7,7 @@ const siteURL = process.env.NODE_ENV === 'production'
   ? 'https://reeserj.github.io/trak2'
   : 'http://localhost:3000';
 
-const redirectURL = process.env.NODE_ENV === 'production'
-  ? 'https://reeserj.github.io/trak2/auth/callback'
-  : `${siteURL}/auth/callback`;
+const redirectURL = `${siteURL}/auth/callback`;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -28,16 +26,31 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 }); 
 
-// Example signup function with proper redirect handling
+// Updated signup function with better error handling
 export const signUpUser = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: redirectURL
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectURL,
+        data: {
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+
+    if (error) {
+      console.error('Signup error:', error.message);
+      return { data: null, error };
     }
-  });
-  return { data, error };
+
+    console.log('Signup successful:', data);
+    return { data, error: null };
+  } catch (err) {
+    console.error('Unexpected error during signup:', err);
+    return { data: null, error: err as Error };
+  }
 };
 
 // Listen to auth state changes
