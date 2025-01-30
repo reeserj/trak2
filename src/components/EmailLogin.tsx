@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { AuthError } from '@supabase/supabase-js';
 
 interface EmailLoginProps {
   onClose: () => void;
@@ -24,23 +25,45 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
 
     try {
       if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
+        const signUpPromise = supabase.auth.signUp({
           email,
           password,
         });
-        if (error) throw error;
+        
+        const result = await Promise.race([
+          signUpPromise,
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Request timed out')), 10000)
+          )
+        ]);
+
+        if (result.error) throw result.error;
         alert('Check your email for the confirmation link!');
         onClose();
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const signInPromise = supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (error) throw error;
+        
+        const result = await Promise.race([
+          signInPromise,
+          new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Request timed out')), 10000)
+          )
+        ]);
+
+        if (result.error) throw result.error;
         onClose();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      if (err instanceof Error && err.message === 'Request timed out') {
+        setError('Connection timed out. Please try again.');
+      } else if (err instanceof AuthError) {
+        setError(err.message);
+      } else {
+        setError('An error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -52,14 +75,27 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
     setMessage('');
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/trak2/reset-password/`,
+      const resetPromise = supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback`,
       });
 
-      if (error) throw error;
+      const result = await Promise.race([
+        resetPromise,
+        new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('Request timed out')), 10000)
+        )
+      ]);
+
+      if (result.error) throw result.error;
       setMessage('Check your email for the password reset link');
-    } catch (error: any) {
-      setMessage(error.message || 'An error occurred sending reset email');
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Request timed out') {
+        setMessage('Connection timed out. Please try again.');
+      } else if (error instanceof AuthError) {
+        setMessage(error.message);
+      } else {
+        setMessage('An error occurred sending reset email');
+      }
     } finally {
       setLoading(false);
     }
