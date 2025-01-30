@@ -62,10 +62,34 @@ interface MagicLinkResponse {
 export const signInWithMagicLink = async (email: string): Promise<MagicLinkResponse> => {
   try {
     console.log('Attempting to send magic link to:', email);
+    
+    // First check if user exists
+    const { data: user } = await supabase.auth.getUser();
+    
+    if (!user?.user) {
+      // Create user if they don't exist
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password: crypto.randomUUID(), // Generate a random password
+        options: {
+          emailRedirectTo: redirectURL,
+          data: {
+            created_at: new Date().toISOString(),
+            provider: 'magic_link'
+          }
+        }
+      });
+
+      if (signUpError) {
+        console.error('User creation error:', signUpError);
+        return { data: null, error: signUpError };
+      }
+    }
+
+    // Send the magic link
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: false,
         emailRedirectTo: redirectURL
       }
     });
@@ -78,30 +102,6 @@ export const signInWithMagicLink = async (email: string): Promise<MagicLinkRespo
         name: error.name,
         details: error
       });
-
-      // If user doesn't exist, try to create them first
-      if (error.message.includes('Email not confirmed') || error.message.includes('User not found')) {
-        console.log('Attempting to create user first...');
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password: crypto.randomUUID(), // Generate a random password
-          options: {
-            emailRedirectTo: redirectURL,
-            data: {
-              created_at: new Date().toISOString(),
-              provider: 'magic_link'
-            }
-          }
-        });
-
-        if (signUpError) {
-          console.error('User creation error:', signUpError);
-          return { data: null, error: signUpError };
-        }
-
-        // Try magic link again after user creation
-        return signInWithMagicLink(email);
-      }
 
       return { data: null, error };
     }
