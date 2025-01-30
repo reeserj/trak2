@@ -19,7 +19,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: 'trak2-auth',
-    debug: true
+    debug: false,
+    redirectTo: redirectURL
   },
   global: {
     headers: {
