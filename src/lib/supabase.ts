@@ -13,7 +13,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'trak2-auth',
+    debug: process.env.NODE_ENV === 'development'
   },
   global: {
     fetch: (...args) => fetch(...args),

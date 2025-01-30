@@ -28,6 +28,9 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
         const signUpPromise = supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         });
         
         const result = await Promise.race([
@@ -76,7 +79,7 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
 
     try {
       const resetPromise = supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`
       });
 
       const result = await Promise.race([
