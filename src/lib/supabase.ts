@@ -53,20 +53,20 @@ export const signUpUser = async (email: string, password: string) => {
   }
 };
 
+interface MagicLinkResponse {
+  data: any | null;
+  error: Error | null;
+}
+
 // Magic Link signin function
-export const signInWithMagicLink = async (email: string) => {
+export const signInWithMagicLink = async (email: string): Promise<MagicLinkResponse> => {
   try {
     console.log('Attempting to send magic link to:', email);
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        shouldCreateUser: true,
-        emailRedirectTo: redirectURL,
-        data: {
-          // Add minimal user data to help with debugging
-          created_at: new Date().toISOString(),
-          provider: 'magic_link'
-        }
+        shouldCreateUser: false,
+        emailRedirectTo: redirectURL
       }
     });
 
@@ -78,6 +78,31 @@ export const signInWithMagicLink = async (email: string) => {
         name: error.name,
         details: error
       });
+
+      // If user doesn't exist, try to create them first
+      if (error.message.includes('Email not confirmed') || error.message.includes('User not found')) {
+        console.log('Attempting to create user first...');
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password: crypto.randomUUID(), // Generate a random password
+          options: {
+            emailRedirectTo: redirectURL,
+            data: {
+              created_at: new Date().toISOString(),
+              provider: 'magic_link'
+            }
+          }
+        });
+
+        if (signUpError) {
+          console.error('User creation error:', signUpError);
+          return { data: null, error: signUpError };
+        }
+
+        // Try magic link again after user creation
+        return signInWithMagicLink(email);
+      }
+
       return { data: null, error };
     }
 
@@ -85,7 +110,6 @@ export const signInWithMagicLink = async (email: string) => {
     return { data, error: null };
   } catch (err) {
     console.error('Unexpected error during magic link signin:', err);
-    // If it's an error we can handle, return it structured
     if (err instanceof Error) {
       return { 
         data: null, 
@@ -94,7 +118,7 @@ export const signInWithMagicLink = async (email: string) => {
           name: err.name,
           // @ts-ignore - adding stack for debugging
           stack: err.stack
-        }
+        } as Error
       };
     }
     return { data: null, error: err as Error };
