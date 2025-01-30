@@ -28,6 +28,18 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 }); 
 
+// Example signup function with proper redirect handling
+export const signUpUser = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: redirectURL
+    }
+  });
+  return { data, error };
+};
+
 // Listen to auth state changes
 supabase.auth.onAuthStateChange((event, session) => {
   console.log('Auth event:', event);
