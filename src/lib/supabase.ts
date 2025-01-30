@@ -17,7 +17,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: 'trak2-auth',
-    debug: false
+    debug: true
   },
   global: {
     headers: {
@@ -49,6 +49,30 @@ export const signUpUser = async (email: string, password: string) => {
     return { data, error: null };
   } catch (err) {
     console.error('Unexpected error during signup:', err);
+    return { data: null, error: err as Error };
+  }
+};
+
+// Magic Link signin function
+export const signInWithMagicLink = async (email: string) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: redirectURL,
+      }
+    });
+
+    if (error) {
+      console.error('Magic link error:', error.message);
+      return { data: null, error };
+    }
+
+    console.log('Magic link sent successfully');
+    return { data, error: null };
+  } catch (err) {
+    console.error('Unexpected error during magic link signin:', err);
     return { data: null, error: err as Error };
   }
 };
