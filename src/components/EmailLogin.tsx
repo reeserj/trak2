@@ -13,11 +13,14 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isResetMode, setIsResetMode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    setMessage('');
 
     try {
       if (isSignUp) {
@@ -43,6 +46,25 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/trak2/reset-password`,
+      });
+
+      if (error) throw error;
+      setMessage('Check your email for the password reset link');
+    } catch (error: any) {
+      setMessage(error.message || 'An error occurred sending reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 rounded-lg bg-white dark:bg-gray-800 shadow-xl w-full max-w-md">
       <div className="flex justify-between items-center mb-4">
@@ -63,7 +85,7 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={isResetMode ? handlePasswordReset : handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Email
@@ -79,21 +101,29 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
           />
         </div>
         
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            required
-            disabled={loading}
-            minLength={6}
-          />
-        </div>
+        {!isResetMode && (
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-blue focus:ring-brand-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              required
+              disabled={loading}
+              minLength={6}
+            />
+          </div>
+        )}
+
+        {message && (
+          <div className={`text-sm ${message.includes('Check your email') ? 'text-green-400' : 'text-red-400'}`}>
+            {message}
+          </div>
+        )}
 
         <button
           type="submit"
@@ -111,6 +141,17 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
           ) : (
             isSignUp ? 'Sign Up' : 'Sign In'
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setIsResetMode(!isResetMode);
+            setMessage('');
+          }}
+          className="w-full text-sm text-gray-400 hover:text-white transition-colors"
+        >
+          {isResetMode ? 'Back to Login' : 'Forgot Password?'}
         </button>
       </form>
 
