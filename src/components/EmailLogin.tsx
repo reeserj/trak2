@@ -25,13 +25,18 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
 
     try {
       if (isSignUp) {
+        const redirectTo = process.env.NODE_ENV === 'production'
+          ? 'https://reeserj.github.io/trak2/auth/callback'
+          : `${window.location.origin}/auth/callback`;
+
         const signUpPromise = supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: process.env.NODE_ENV === 'production'
-              ? 'https://reeserj.github.io/trak2/auth/callback'
-              : `${window.location.origin}/auth/callback`
+            emailRedirectTo: redirectTo,
+            data: {
+              redirect_url: redirectTo
+            }
           }
         });
         

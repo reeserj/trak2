@@ -19,9 +19,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     flowType: 'pkce',
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     storageKey: 'trak2-auth',
-    debug: process.env.NODE_ENV === 'development'
+    debug: true
   },
   global: {
-    fetch: (...args) => fetch(...args),
-  },
+    headers: {
+      'X-Client-Info': 'supabase-js-web'
+    }
+  }
 }); 
