@@ -27,3 +27,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     }
   }
 }); 
+
+// Listen to auth state changes
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth event:', event);
+  if (session) {
+    console.log('Session:', session);
+  }
+}); 
