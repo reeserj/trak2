@@ -63,33 +63,11 @@ export const signInWithMagicLink = async (email: string): Promise<MagicLinkRespo
   try {
     console.log('Attempting to send magic link to:', email);
     
-    // First check if user exists
-    const { data: user } = await supabase.auth.getUser();
-    
-    if (!user?.user) {
-      // Create user if they don't exist
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password: crypto.randomUUID(), // Generate a random password
-        options: {
-          emailRedirectTo: redirectURL,
-          data: {
-            created_at: new Date().toISOString(),
-            provider: 'magic_link'
-          }
-        }
-      });
-
-      if (signUpError) {
-        console.error('User creation error:', signUpError);
-        return { data: null, error: signUpError };
-      }
-    }
-
-    // Send the magic link
+    // Simple OTP signin with automatic user creation
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
+        shouldCreateUser: true,
         emailRedirectTo: redirectURL
       }
     });
