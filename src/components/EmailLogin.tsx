@@ -29,7 +29,9 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: process.env.NODE_ENV === 'production'
+              ? 'https://reeserj.github.io/trak2/auth/callback'
+              : `${window.location.origin}/auth/callback`
           }
         });
         
@@ -79,7 +81,9 @@ export function EmailLogin({ onClose }: EmailLoginProps) {
 
     try {
       const resetPromise = supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback`
+        redirectTo: process.env.NODE_ENV === 'production'
+          ? 'https://reeserj.github.io/trak2/auth/callback'
+          : `${window.location.origin}/auth/callback`
       });
 
       const result = await Promise.race([
