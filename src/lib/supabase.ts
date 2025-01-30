@@ -61,31 +61,45 @@ interface MagicLinkResponse {
 // Magic Link signin function
 export const signInWithMagicLink = async (email: string): Promise<MagicLinkResponse> => {
   try {
-    console.log('Attempting to send magic link to:', email);
+    console.log('Attempting to sign in with email:', email);
     
-    // Simple OTP signin with automatic user creation
-    const { data, error } = await supabase.auth.signInWithOtp({
+    // First try to create a user with a random password
+    const tempPassword = crypto.randomUUID();
+    const { error: signUpError } = await supabase.auth.signUp({
       email,
+      password: tempPassword,
       options: {
-        shouldCreateUser: true,
-        emailRedirectTo: redirectURL
+        emailRedirectTo: redirectURL,
+        data: {
+          created_at: new Date().toISOString()
+        }
       }
     });
 
-    if (error) {
-      // Log detailed error information
-      console.error('Magic link error details:', {
-        message: error.message,
-        status: error.status,
-        name: error.name,
-        details: error
+    // If user already exists or was created successfully, send magic link
+    if (!signUpError || signUpError.message.includes('already registered')) {
+      console.log('Attempting to send magic link...');
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectURL
       });
 
-      return { data: null, error };
-    }
+      if (error) {
+        console.error('Magic link error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          details: error
+        });
+        return { data: null, error };
+      }
 
-    console.log('Magic link sent successfully:', data);
-    return { data, error: null };
+      console.log('Magic link sent successfully');
+      return { data, error: null };
+    } else {
+      // If there was an error creating the user
+      console.error('User creation error:', signUpError);
+      return { data: null, error: signUpError };
+    }
   } catch (err) {
     console.error('Unexpected error during magic link signin:', err);
     if (err instanceof Error) {

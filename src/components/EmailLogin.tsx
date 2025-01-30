@@ -26,26 +26,27 @@ export function EmailLogin({ onClose }: MagicLinkLoginProps) {
         console.error('Detailed error:', error);
         // Check for specific error types
         if (error.message?.includes('Database error')) {
-          setError('Unable to create account. Please try again later or contact support if the problem persists.');
+          setError('Unable to process request. Please try again later or contact support.');
+        } else if (error.message?.includes('already registered')) {
+          // This is actually a success case for existing users
+          setMessage('Check your email for the login link!');
+          setTimeout(onClose, 3000);
+          return;
         } else {
-          throw error;
+          setError(error.message || 'An unexpected error occurred');
         }
         return;
       }
       
-      setMessage('Check your email for the magic link!');
+      setMessage('Check your email for the login link!');
       // Don't close the modal immediately so user can see the success message
       setTimeout(onClose, 3000);
     } catch (err) {
       console.error('Login error:', err);
       if (err instanceof Error) {
-        // Format the error message to be more user-friendly
-        const errorMessage = err.message
-          .replace('Database error', 'Account creation failed')
-          .replace(/\b(?:auth|database|error)\b/gi, '');
-        setError(errorMessage || 'An unexpected error occurred');
+        setError(err.message || 'An unexpected error occurred');
       } else {
-        setError('An error occurred while sending the magic link');
+        setError('An error occurred while processing your request');
       }
     } finally {
       setLoading(false);
