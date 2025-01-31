@@ -88,17 +88,29 @@ export default function Dashboard() {
   useEffect(() => {
     if (!loading && !user) {
       router.push('/');
+      return;
     }
-  }, [user, loading, router]);
 
-  useEffect(() => {
-    if (user) {
-      loadJournalStats();
-      loadHabitStats();
-      loadActivityData();
-      loadTagColors();
-    }
-  }, [user]);
+    // Handle auth state
+    const handleAuthState = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error getting session:', error);
+        router.push('/');
+        return;
+      }
+
+      if (session) {
+        // Load user data
+        loadJournalStats();
+        loadHabitStats();
+        loadActivityData();
+        loadTagColors();
+      }
+    };
+
+    handleAuthState();
+  }, [user, loading, router]);
 
   const loadJournalStats = async () => {
     try {
@@ -633,15 +645,18 @@ export default function Dashboard() {
             
             <div className="flex">
               {/* Day labels */}
-              <div className="flex flex-col text-xs text-gray-600 dark:text-gray-400 pr-2" style={{ height: '112px', paddingTop: '0px' }}>
-                <div style={{ height: '12px', marginTop: '0px' }}>Sun</div>
-                <div style={{ height: '12px', marginTop: '16px' }}>Tue</div>
-                <div style={{ height: '12px', marginTop: '16px' }}>Thu</div>
-                <div style={{ height: '12px', marginTop: '16px' }}>Sat</div>
+              <div className="grid grid-rows-7 text-xs text-gray-600 dark:text-gray-400 pr-2 w-8">
+                <div className="h-[15px]">Sun</div>
+                <div className="invisible h-[15px]">Mon</div>
+                <div className="h-[15px]">Tue</div>
+                <div className="invisible h-[15px]">Wed</div>
+                <div className="h-[15px]">Thu</div>
+                <div className="invisible h-[15px]">Fri</div>
+                <div className="h-[15px]">Sat</div>
               </div>
 
               {/* Activity grid */}
-              <div className="flex gap-[2px]" style={{ width: '100%' }}>
+              <div className="flex gap-[2px] flex-1">
                 {(() => {
                   // Get start and end dates
                   const endDate = new Date();

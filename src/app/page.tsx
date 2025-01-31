@@ -1,12 +1,18 @@
 'use client';
 
 import { ConnectButton } from '@/components/ConnectButton'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-white via-blue-100 to-white dark:from-gray-900 dark:via-gray-800 dark:to-black animate-gradient-shift bg-[length:200%_200%] p-6">
+      {/* Theme Toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Hero Section */}
       <div className="relative px-6 lg:px-8">
         <div className="mx-auto max-w-3xl pt-20 pb-32 sm:pt-48 sm:pb-40">

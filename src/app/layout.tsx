@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
-import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthProvider } from '@/context/AuthContext'
 import { SidebarProvider } from '@/context/SidebarContext'
 import { Sidebar } from '@/components/Sidebar'
@@ -22,19 +21,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen`}>
-        <ThemeProvider>
+      <body className={`${inter.className} min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
+        <Providers>
           <AuthProvider>
             <SidebarProvider>
               <div className="relative">
                 <Sidebar />
-                <Providers>
-                  <SidebarContent>{children}</SidebarContent>
-                </Providers>
+                <SidebarContent>{children}</SidebarContent>
               </div>
             </SidebarProvider>
           </AuthProvider>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )
